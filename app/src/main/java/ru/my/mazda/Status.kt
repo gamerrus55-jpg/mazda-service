@@ -30,6 +30,8 @@ data class Due(
     /** Когда наберётся пробег — по среднему пробегу в день. */
     val etaDays: Long?,
     val progress: Float,
+    /** Истории нет — считаем от покупки машины. */
+    val fromPurchase: Boolean = false,
 ) {
     /** Короткая строка для карточки. */
     val summary: String
@@ -59,6 +61,7 @@ object Status {
         val baseDate: LocalDate
         val km: Int?
         val months: Int?
+        var fromPurchase = false
         if (last != null) {
             baseKm = last.km
             baseDate = last.date
@@ -69,6 +72,12 @@ object Status {
             baseDate = store.buildDate
             km = s.firstKm
             months = s.firstMonths
+        } else if (store.purchaseSet) {
+            baseKm = store.purchaseKm
+            baseDate = store.purchaseDate
+            km = if (hard) s.kmHard else s.km
+            months = if (hard) s.monthsHard else s.months
+            fromPurchase = true
         } else {
             return Due(s, Level.UNKNOWN, null, null, null, if (hard) s.kmHard else s.km,
                 if (hard) s.monthsHard else s.months, null, null, null, null, null, 0f)
@@ -97,7 +106,7 @@ object Status {
             soon -> Level.SOON
             else -> Level.OK
         }
-        return Due(s, level, last, baseKm, baseDate, km, months, dueKm, dueDate, leftKm, leftDays, eta, progress)
+        return Due(s, level, last, baseKm, baseDate, km, months, dueKm, dueDate, leftKm, leftDays, eta, progress, fromPurchase)
     }
 
     /** Все пункты: сначала то, что горит. */

@@ -341,13 +341,24 @@ fun DetailScreen(
                 val last = d.last
                 InfoLine(
                     "Последний раз",
-                    if (last != null) "${date(last.date)} · ${km(last.km)}"
-                    else "новая машина, ${store.buildDate.year}"
+                    when {
+                        last != null -> "${date(last.date)} · ${km(last.km)}"
+                        d.fromPurchase -> "неизвестно — считаем с покупки (${km(store.purchaseKm)}, ${date(store.purchaseDate)})"
+                        else -> "новая машина, ${store.buildDate.year}"
+                    }
                 )
                 val next = listOfNotNull(d.dueKm?.let { "на ${km(it)}" }, d.dueDate?.let { "до ${date(it)}" })
                     .joinToString(" или ")
                 if (next.isNotEmpty()) InfoLine("Следующий раз", next)
                 if (d.etaDays != null) InfoLine("По твоему пробегу", "≈ через ${period(d.etaDays)}")
+            }
+            if (d.fromPurchase && service.official) {
+                Spacer(Modifier.height(8.dp))
+                Text(
+                    "До покупки история неизвестна. Если сделаешь — отметь, и отсчёт пойдёт от этой даты.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
             Spacer(Modifier.height(12.dp))
             RedButton("Отметить: ${service.action.lowercase()}", onDone, Modifier.fillMaxWidth())
@@ -526,7 +537,7 @@ fun JournalScreen(store: Store, onAdd: () -> Unit, onEdit: (Record) -> Unit) {
 // ---------- Настройки ----------
 
 @Composable
-fun SettingsScreen(store: Store, latestBuild: Int?) {
+fun SettingsScreen(store: Store, latestBuild: Int?, onPurchase: () -> Unit) {
     store.tick.intValue
     val context = LocalContext.current
     val uri = LocalUriHandler.current
@@ -606,6 +617,18 @@ fun SettingsScreen(store: Store, latestBuild: Int?) {
         }
 
         SoftCard {
+            Text("Покупка", style = MaterialTheme.typography.titleMedium)
+            Spacer(Modifier.height(6.dp))
+            Text(
+                "Куплена на ${km(store.purchaseKm)}, ${date(store.purchaseDate)}. " +
+                    "Всё, что не отмечено в журнале, считается от покупки.",
+                style = MaterialTheme.typography.bodyMedium
+            )
+            Spacer(Modifier.height(8.dp))
+            SoftButton("Изменить", onPurchase, Modifier.fillMaxWidth(), height = 48.dp)
+        }
+
+        SoftCard {
             Text("Машина", style = MaterialTheme.typography.titleMedium)
             Spacer(Modifier.height(6.dp))
             Text("Mazda Axela (BM) · 1.5 SkyActiv-G · АКПП · передний привод", style = MaterialTheme.typography.bodyMedium)
@@ -648,5 +671,95 @@ fun SettingsScreen(store: Store, latestBuild: Int?) {
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
+    }
+}
+
+// ---------- Покупка: от чего считать ----------
+
+@Composable
+fun PurchaseScreen(store: Store, onDone: () -> Unit) {
+    val context = LocalContext.current
+    val existing = store.records().filter { store.isPurchaseRecord(it) }.map { it.serviceId }.toSet()
+    var kmText by remember { mutableStateOf(store.purchaseKm.toString()) }
+    var day by remember { mutableStateOf(if (store.purchaseSet) store.purchaseDate else LocalDate.now()) }
+    var done by remember {
+        mutableStateOf(
+            if (store.purchaseSet) existing
+            else setOf("oil", "atf", "cabin_filter", "air_filter")
+        )
+    }
+    val kmVal = kmText.toIntOrNull()
+
+    Column(
+        Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        Text("Покупка машины", style = MaterialTheme.typography.headlineMedium)
+        Text(
+            "Всё, что не отмечено, приложение считает от пробега и даты покупки.",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        OutlinedTextField(
+            value = kmText,
+            onValueChange = { kmText = it.filter { c -> c.isDigit() }.take(7) },
+            label = { Text("Пробег при покупке, км") },
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+            singleLine = true,
+            modifier = Modifier.fillMaxWidth()
+        )
+        Box {
+            OutlinedTextField(
+                value = date(day),
+                onValueChange = {},
+                readOnly = true,
+                label = { Text("Дата покупки") },
+                modifier = Modifier.fillMaxWidth()
+            )
+            Box(
+                Modifier
+                    .matchParentSize()
+                    .clickable {
+                        DatePickerDialog(
+                            context,
+                            { _, y, m, d -> day = LocalDate.of(y, m + 1, d) },
+                            day.year, day.monthValue - 1, day.dayOfMonth
+                        ).show()
+                    }
+            )
+        }
+
+        Text("Что поменял после покупки", style = MaterialTheme.typography.titleMedium)
+        Regulation.all.forEach { s ->
+            val on = s.id in done
+            SoftCard(
+                onClick = { done = if (on) done - s.id else done + s.id },
+                padding = 10.dp
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    PicTile(s.pics.first(), 44.dp)
+                    Spacer(Modifier.width(12.dp))
+                    Text(s.title, Modifier.weight(1f), style = MaterialTheme.typography.bodyLarge)
+                    Checkbox(checked = on, onCheckedChange = { done = if (it) done + s.id else done - s.id })
+                }
+            }
+        }
+        Text(
+            "Отмеченные запишутся в журнал на пробеге покупки. Цену и точную дату можно поправить потом в журнале.",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        RedButton(
+            "Готово",
+            onClick = {
+                store.savePurchase(kmVal ?: 0, day, done)
+                onDone()
+            },
+            enabled = kmVal != null,
+            modifier = Modifier.fillMaxWidth()
+        )
     }
 }

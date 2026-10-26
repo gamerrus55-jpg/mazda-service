@@ -18,6 +18,8 @@ data class Record(
     val note: String,
 )
 
+private const val PURCHASE_ID_BASE = 1_000_000L
+
 /** Всё хранится на телефоне. */
 class Store(context: Context) {
 
@@ -106,6 +108,44 @@ class Store(context: Context) {
         val km = last.second - first.second
         if (days < 7 || km <= 0) return null
         return km.toDouble() / days
+    }
+
+    // ---------- Покупка машины ----------
+
+    /** Указаны ли пробег и дата покупки. От них считается всё, что не отмечено в журнале. */
+    val purchaseSet: Boolean get() = prefs.getBoolean("purchaseSet", false)
+
+    val purchaseKm: Int get() = prefs.getInt("purchaseKm", 61_000)
+
+    val purchaseDate: LocalDate
+        get() = LocalDate.ofEpochDay(prefs.getLong("purchaseDate", LocalDate.now().toEpochDay()))
+
+    /** id записей «сделал после покупки»: постоянные, чтобы повторное сохранение не плодило дубли. */
+    fun purchaseRecordId(serviceId: String): Long =
+        PURCHASE_ID_BASE + Regulation.all.indexOfFirst { it.id == serviceId }
+
+    fun isPurchaseRecord(r: Record): Boolean = r.id in PURCHASE_ID_BASE until PURCHASE_ID_BASE + 100
+
+    fun savePurchase(km: Int, date: LocalDate, done: Set<String>) {
+        prefs.edit()
+            .putBoolean("purchaseSet", true)
+            .putInt("purchaseKm", km)
+            .putLong("purchaseDate", date.toEpochDay())
+            .apply()
+        val kept = records().filter { !isPurchaseRecord(it) }
+        val added = Regulation.all.filter { it.id in done }.map { s ->
+            Record(
+                id = purchaseRecordId(s.id),
+                serviceId = s.id,
+                title = s.title,
+                date = date,
+                km = km,
+                price = null,
+                note = "после покупки",
+            )
+        }
+        save(kept + added)
+        if (km > odometer) setOdometer(km)
     }
 
     // ---------- Журнал ----------

@@ -49,6 +49,7 @@ fun App(store: Store) {
             var draft by remember { mutableStateOf<Draft?>(null) }
             var odoDialog by remember { mutableStateOf(false) }
             var latestBuild by remember { mutableStateOf<Int?>(null) }
+            var purchaseEdit by remember { mutableStateOf(false) }
 
             val notifPermission = rememberLauncherForActivityResult(
                 ActivityResultContracts.RequestPermission()
@@ -72,6 +73,12 @@ fun App(store: Store) {
                         Reminders.schedule(context)
                         if (Build.VERSION.SDK_INT >= 33) notifPermission.launch(Manifest.permission.POST_NOTIFICATIONS)
                     }
+                } else if (!store.purchaseSet || purchaseEdit) {
+                    if (purchaseEdit) BackHandler { purchaseEdit = false }
+                    PurchaseScreen(store) {
+                        purchaseEdit = false
+                        screen = Screen.Main(Tab.PLAN)
+                    }
                 } else when (val s = screen) {
                     is Screen.Main -> Column(Modifier.fillMaxSize()) {
                         Box(Modifier.weight(1f).padding(horizontal = 16.dp)) {
@@ -87,7 +94,7 @@ fun App(store: Store) {
                                     onAdd = { draft = Draft("", "") },
                                     onEdit = { r -> draft = Draft(r.serviceId, r.title, r) },
                                 )
-                                Tab.SETTINGS -> SettingsScreen(store, latestBuild)
+                                Tab.SETTINGS -> SettingsScreen(store, latestBuild, onPurchase = { purchaseEdit = true })
                             }
                         }
                         BottomBar(s.tab) { screen = Screen.Main(it) }

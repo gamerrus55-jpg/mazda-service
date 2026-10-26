@@ -14,6 +14,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         store = Store(this)
         if (store.remind) Reminders.schedule(this)
-        setContent { App(store) }
+        val openOdo = intent?.getBooleanExtra(CarWidget.EXTRA_ODO, false) ?: false
+        setContent { App(store, openOdo) }
     }
 }

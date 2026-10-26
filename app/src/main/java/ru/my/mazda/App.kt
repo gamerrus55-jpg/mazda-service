@@ -26,6 +26,8 @@ import androidx.compose.ui.unit.sp
 enum class Tab(val emoji: String, val title: String) {
     PLAN("🔧", "Регламент"),
     LOG("📒", "Журнал"),
+    WINTER("❄️", "Зима"),
+    CAR("🚗", "Машина"),
     SETTINGS("⚙️", "Настройки"),
 }
 
@@ -38,7 +40,7 @@ sealed interface Screen {
 data class Draft(val serviceId: String, val title: String, val edit: Record? = null)
 
 @Composable
-fun App(store: Store) {
+fun App(store: Store, openOdo: Boolean = false) {
     AppTheme {
         Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
             val context = LocalContext.current
@@ -47,7 +49,7 @@ fun App(store: Store) {
 
             var screen by remember { mutableStateOf<Screen>(Screen.Main(Tab.PLAN)) }
             var draft by remember { mutableStateOf<Draft?>(null) }
-            var odoDialog by remember { mutableStateOf(false) }
+            var odoDialog by remember { mutableStateOf(openOdo && store.isSetUp) }
             var latestBuild by remember { mutableStateOf<Int?>(null) }
             var purchaseEdit by remember { mutableStateOf(false) }
 
@@ -94,6 +96,8 @@ fun App(store: Store) {
                                     onAdd = { draft = Draft("", "") },
                                     onEdit = { r -> draft = Draft(r.serviceId, r.title, r) },
                                 )
+                                Tab.WINTER -> WinterScreen(store)
+                                Tab.CAR -> CarScreen(store)
                                 Tab.SETTINGS -> SettingsScreen(store, latestBuild, onPurchase = { purchaseEdit = true })
                             }
                         }

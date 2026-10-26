@@ -24,7 +24,15 @@ import java.util.concurrent.TimeUnit
 /** Раз в день проверяет регламент и присылает уведомление, если что-то пора делать. */
 class ReminderWorker(context: Context, params: WorkerParameters) : CoroutineWorker(context, params) {
     override suspend fun doWork(): Result {
-        Reminders.check(applicationContext, force = false)
+        val ctx = applicationContext
+        Reminders.check(ctx, force = false)
+        // Погода: подсказка, когда переобуваться
+        val store = Store(ctx)
+        if (store.isSetUp) {
+            val days = Weather.refresh(store, force = true)
+            Reminders.tires(ctx, store, Weather.advice(days, store.tiresWinter))
+        }
+        CarWidget.updateAll(ctx)
         return Result.success()
     }
 }
@@ -33,6 +41,34 @@ object Reminders {
     private const val CHANNEL = "service"
     private const val WORK = "daily-check"
     private const val NOTIFY_ID = 1
+
+    /** Уведомление про резину — один раз на каждый новый совет. */
+    @SuppressLint("MissingPermission")
+    fun tires(context: Context, store: Store, advice: Advice?) {
+        if (advice == null || advice.level != TireAdvice.CHANGE_NOW || !store.remind) return
+        val key = (if (store.tiresWinter) "summer-" else "winter-") + store.winterSeason()
+        if (store.lastTireNotice == key || !canNotify(context)) return
+        channel(context)
+        val open = PendingIntent.getActivity(
+            context, 3,
+            Intent(context, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP),
+            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+        )
+        val n = NotificationCompat.Builder(context, CHANNEL)
+            .setSmallIcon(R.drawable.ic_notif)
+            .setColor(0xFFD71920.toInt())
+            .setContentTitle("🛞 " + advice.title)
+            .setContentText(advice.text)
+            .setStyle(NotificationCompat.BigTextStyle().bigText(advice.text))
+            .setContentIntent(open)
+            .setAutoCancel(true)
+            .build()
+        try {
+            NotificationManagerCompat.from(context).notify(2, n)
+            store.lastTireNotice = key
+        } catch (e: SecurityException) {
+        }
+    }
 
     fun schedule(context: Context) {
         val req = PeriodicWorkRequestBuilder<ReminderWorker>(1, TimeUnit.DAYS)

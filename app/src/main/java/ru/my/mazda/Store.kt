@@ -23,11 +23,101 @@ private const val PURCHASE_ID_BASE = 1_000_000L
 /** Всё хранится на телефоне. */
 class Store(context: Context) {
 
+    private val app = context.applicationContext
     private val prefs = context.getSharedPreferences("car", Context.MODE_PRIVATE)
 
-    /** Меняется при любой правке — экраны по нему перерисовываются. */
+    /** Меняется при любой правке — экраны и виджет перерисовываются. */
     val tick = mutableIntStateOf(0)
-    private fun changed() { tick.intValue++ }
+    private fun changed() {
+        tick.intValue++
+        CarWidget.updateAll(app)
+    }
+
+    // ---------- Зима: погода, резина, чек-лист ----------
+
+    val weatherJson: String get() = prefs.getString("weather", "") ?: ""
+    val weatherTime: Long get() = prefs.getLong("weatherTime", 0)
+
+    fun saveWeather(json: String) {
+        prefs.edit().putString("weather", json).putLong("weatherTime", System.currentTimeMillis()).apply()
+        changed()
+    }
+
+    /** Сейчас стоит зимняя резина. */
+    val tiresWinter: Boolean get() = prefs.getBoolean("tiresWinter", false)
+
+    /** Переобулся: запомнить и записать в журнал (заодно это перестановка колёс по регламенту). */
+    fun swapTires(toWinter: Boolean) {
+        prefs.edit().putBoolean("tiresWinter", toWinter).apply()
+        addRecord(
+            Record(
+                id = System.currentTimeMillis(),
+                serviceId = "tires",
+                title = "Колёса и шины",
+                date = LocalDate.now(),
+                km = odometer,
+                price = null,
+                note = if (toWinter) "переобувка на зимнюю" else "переобувка на летнюю",
+            )
+        )
+    }
+
+    fun lastSwap(): Record? = history("tires").firstOrNull { it.note.startsWith("переобувка") }
+
+    /** Чтобы не слать одно и то же уведомление про резину каждый день. */
+    var lastTireNotice: String
+        get() = prefs.getString("tireNotice", "") ?: ""
+        set(v) { prefs.edit().putString("tireNotice", v).apply() }
+
+    /** Зимний сезон: 2026 — это зима 2026/27. */
+    fun winterSeason(today: LocalDate = LocalDate.now()): Int =
+        if (today.monthValue >= 7) today.year else today.year - 1
+
+    fun checked(): Set<String> =
+        (prefs.getString("check_" + winterSeason(), "") ?: "").split(',').filter { it.isNotBlank() }.toSet()
+
+    fun toggleCheck(id: String) {
+        val now = checked()
+        val next = if (id in now) now - id else now + id
+        prefs.edit().putString("check_" + winterSeason(), next.joinToString(",")).apply()
+        changed()
+    }
+
+    fun resetChecklist() {
+        prefs.edit().remove("check_" + winterSeason()).apply()
+        changed()
+    }
+
+    // ---------- Карточка машины ----------
+
+    fun card(): List<CardField> {
+        val raw = prefs.getString("card", null) ?: return CarCard.defaults
+        return try {
+            val arr = JSONArray(raw)
+            (0 until arr.length()).map { i ->
+                val o = arr.getJSONObject(i)
+                CardField(o.getLong("id"), o.getString("l"), o.optString("v"), o.optString("h"))
+            }
+        } catch (e: Exception) {
+            CarCard.defaults
+        }
+    }
+
+    private fun saveCard(list: List<CardField>) {
+        val arr = JSONArray()
+        list.forEach { f ->
+            arr.put(JSONObject().put("id", f.id).put("l", f.label).put("v", f.value).put("h", f.hint))
+        }
+        prefs.edit().putString("card", arr.toString()).apply()
+        changed()
+    }
+
+    fun putField(f: CardField) {
+        val list = card()
+        saveCard(if (list.any { it.id == f.id }) list.map { if (it.id == f.id) f else it } else list + f)
+    }
+
+    fun deleteField(id: Long) = saveCard(card().filter { it.id != id })
 
     // ---------- Машина и пробег ----------
 

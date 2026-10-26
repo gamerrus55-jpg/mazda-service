@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- pic_belt: нарисовано скриптом, своя иллюстрация -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="120dp"
+    android:height="120dp"
+    android:viewportWidth="120"
+    android:viewportHeight="120">
+    <path
+        android:pathData="M66.59,94.48 L106.90,46.08 A22,22 0 0 0 78.29,13.38 L24.96,46.91 A32,32 0 1 0 66.59,94.48 Z"
+        android:fillColor="#1D2027" />
+    <path
+        android:pathData="M16.00,74.00 a26.00,26.00 0 1 0 52.00,0 a26.00,26.00 0 1 0 -52.00,0 Z"
+        android:fillColor="#8A909C" />
+    <path
+        android:pathData="M24.00,74.00 a18.00,18.00 0 1 0 36.00,0 a18.00,18.00 0 1 0 -36.00,0 Z"
+        android:fillColor="#C9CDD4" />
+    <path
+        android:pathData="M35.00,74.00 a7.00,7.00 0 1 0 14.00,0 a7.00,7.00 0 1 0 -14.00,0 Z"
+        android:fillColor="#3A3F4B" />
+    <path
+        android:pathData="M74.00,32.00 a16.00,16.00 0 1 0 32.00,0 a16.00,16.00 0 1 0 -32.00,0 Z"
+        android:fillColor="#8A909C" />
+    <path
+        android:pathData="M80.00,32.00 a10.00,10.00 0 1 0 20.00,0 a10.00,10.00 0 1 0 -20.00,0 Z"
+        android:fillColor="#C9CDD4" />
+    <path
+        android:pathData="M85.00,32.00 a5.00,5.00 0 1 0 10.00,0 a5.00,5.00 0 1 0 -10.00,0 Z"
+        android:fillColor="#3A3F4B" />
+    <path
+        android:pathData="M80.00,88.00 a12.00,12.00 0 1 0 24.00,0 a12.00,12.00 0 1 0 -24.00,0 Z"
+        android:fillColor="#D71920" />
+    <path
+        android:pathData="M88.00,88.00 a4.00,4.00 0 1 0 8.00,0 a4.00,4.00 0 1 0 -8.00,0 Z"
+        android:fillColor="#FFFFFF" />
+</vector>

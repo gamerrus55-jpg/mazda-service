@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- pic_air_filter: нарисовано скриптом, своя иллюстрация -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="120dp"
+    android:height="120dp"
+    android:viewportWidth="120"
+    android:viewportHeight="120">
+    <path
+        android:pathData="M23,46 h74 a7,7 0 0 1 7,7 v42 a7,7 0 0 1 -7,7 h-74 a7,7 0 0 1 -7,-7 v-42 a7,7 0 0 1 7,-7 Z"
+        android:fillColor="#3A3F4B" />
+    <path
+        android:pathData="M26,54 h68 a2,2 0 0 1 2,2 v36 a2,2 0 0 1 -2,2 h-68 a2,2 0 0 1 -2,-2 v-36 a2,2 0 0 1 2,-2 Z"
+        android:fillColor="#F3E6C8" />
+    <path
+        android:pathData="M24,94 L27.00,54 L30.00,94 L33.00,54 L36.00,94 L39.00,54 L42.00,94 L45.00,54 L48.00,94 L51.00,54 L54.00,94 L57.00,54 L60.00,94 L63.00,54 L66.00,94 L69.00,54 L72.00,94 L75.00,54 L78.00,94 L81.00,54 L84.00,94 L87.00,54 L90.00,94 L93.00,54 L96.00,94"
+        android:strokeColor="#B89C64"
+        android:strokeWidth="2.2"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+    <path
+        android:pathData="M36,14 v18 M30,26 l6,7 6,-7"
+        android:strokeColor="#D71920"
+        android:strokeWidth="4.5"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+    <path
+        android:pathData="M60,10 v22 M54,26 l6,7 6,-7"
+        android:strokeColor="#D71920"
+        android:strokeWidth="4.5"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+    <path
+        android:pathData="M84,14 v18 M78,26 l6,7 6,-7"
+        android:strokeColor="#D71920"
+        android:strokeWidth="4.5"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+</vector>

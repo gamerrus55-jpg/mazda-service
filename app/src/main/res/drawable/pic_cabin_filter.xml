@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- pic_cabin_filter: нарисовано скриптом, своя иллюстрация -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="120dp"
+    android:height="120dp"
+    android:viewportWidth="120"
+    android:viewportHeight="120">
+    <path
+        android:pathData="M18,34 h50 a6,6 0 0 1 6,6 v50 a6,6 0 0 1 -6,6 h-50 a6,6 0 0 1 -6,-6 v-50 a6,6 0 0 1 6,-6 Z"
+        android:fillColor="#C9CDD4" />
+    <path
+        android:pathData="M20,40 h46 a2,2 0 0 1 2,2 v46 a2,2 0 0 1 -2,2 h-46 a2,2 0 0 1 -2,-2 v-46 a2,2 0 0 1 2,-2 Z"
+        android:fillColor="#FFFFFF" />
+    <path
+        android:pathData="M18,90 L20.78,40 L23.56,90 L26.33,40 L29.11,90 L31.89,40 L34.67,90 L37.44,40 L40.22,90 L43.00,40 L45.78,90 L48.56,40 L51.33,90 L54.11,40 L56.89,90 L59.67,40 L62.44,90 L65.22,40 L68.00,90"
+        android:strokeColor="#8A909C"
+        android:strokeWidth="2"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+    <path
+        android:pathData="M80,48 C90,42 98,54 108,46"
+        android:strokeColor="#D71920"
+        android:strokeWidth="4.5"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+    <path
+        android:pathData="M80,64 C90,58 98,70 108,62"
+        android:strokeColor="#D71920"
+        android:strokeWidth="4.5"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+    <path
+        android:pathData="M80,80 C90,74 98,86 108,78"
+        android:strokeColor="#D71920"
+        android:strokeWidth="4.5"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+</vector>

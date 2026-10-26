@@ -343,8 +343,7 @@ fun DetailScreen(
                     "Последний раз",
                     when {
                         last != null -> "${date(last.date)} · ${km(last.km)}"
-                        d.fromPurchase -> "неизвестно — считаем с покупки (${km(store.purchaseKm)}, ${date(store.purchaseDate)})"
-                        else -> "новая машина, ${store.buildDate.year}"
+                        else -> "не отмечено — считаем с завода (0 км, ${store.buildDate.year})"
                     }
                 )
                 val next = listOfNotNull(d.dueKm?.let { "на ${km(it)}" }, d.dueDate?.let { "до ${date(it)}" })
@@ -352,10 +351,11 @@ fun DetailScreen(
                 if (next.isNotEmpty()) InfoLine("Следующий раз", next)
                 if (d.etaDays != null) InfoLine("По твоему пробегу", "≈ через ${period(d.etaDays)}")
             }
-            if (d.fromPurchase && service.official) {
+            if (d.fromNew) {
                 Spacer(Modifier.height(8.dp))
                 Text(
-                    "До покупки история неизвестна. Если сделаешь — отметь, и отсчёт пойдёт от этой даты.",
+                    "Неизвестно, делал ли это прежний хозяин, поэтому срок считается с нового авто. " +
+                        "Сделаешь — отметь, и отсчёт пойдёт от твоей замены.",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -621,7 +621,7 @@ fun SettingsScreen(store: Store, latestBuild: Int?, onPurchase: () -> Unit) {
             Spacer(Modifier.height(6.dp))
             Text(
                 "Куплена на ${km(store.purchaseKm)}, ${date(store.purchaseDate)}. " +
-                    "Всё, что не отмечено в журнале, считается от покупки.",
+                    "Всё, что не отмечено в журнале, считается с завода — от 0 км и даты выпуска.",
                 style = MaterialTheme.typography.bodyMedium
             )
             Spacer(Modifier.height(8.dp))
@@ -699,7 +699,8 @@ fun PurchaseScreen(store: Store, onDone: () -> Unit) {
     ) {
         Text("Покупка машины", style = MaterialTheme.typography.headlineMedium)
         Text(
-            "Всё, что не отмечено, приложение считает от пробега и даты покупки.",
+            "Отметь, что ты менял после покупки — отсчёт пойдёт от этих замен. " +
+                "Всё остальное считается с завода: от 0 км и даты выпуска, как будто прежний хозяин ничего не менял.",
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )

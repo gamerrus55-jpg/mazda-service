@@ -30,8 +30,8 @@ data class Due(
     /** Когда наберётся пробег — по среднему пробегу в день. */
     val etaDays: Long?,
     val progress: Float,
-    /** Истории нет — считаем от покупки машины. */
-    val fromPurchase: Boolean = false,
+    /** Истории нет — считаем с завода (0 км, дата выпуска). */
+    val fromNew: Boolean = false,
 ) {
     /** Короткая строка для карточки. */
     val summary: String
@@ -61,26 +61,20 @@ object Status {
         val baseDate: LocalDate
         val km: Int?
         val months: Int?
-        var fromPurchase = false
+        var fromNew = false
         if (last != null) {
             baseKm = last.km
             baseDate = last.date
             km = if (hard) s.kmHard else s.km
             months = if (hard) s.monthsHard else s.months
-        } else if (s.firstKm != null || s.firstMonths != null) {
+        } else {
+            // Истории нет — считаем с завода: от 0 км и даты выпуска,
+            // как будто с нового авто ничего не меняли
             baseKm = 0
             baseDate = store.buildDate
-            km = s.firstKm
-            months = s.firstMonths
-        } else if (store.purchaseSet) {
-            baseKm = store.purchaseKm
-            baseDate = store.purchaseDate
-            km = if (hard) s.kmHard else s.km
-            months = if (hard) s.monthsHard else s.months
-            fromPurchase = true
-        } else {
-            return Due(s, Level.UNKNOWN, null, null, null, if (hard) s.kmHard else s.km,
-                if (hard) s.monthsHard else s.months, null, null, null, null, null, 0f)
+            km = s.firstKm ?: if (hard) s.kmHard else s.km
+            months = s.firstMonths ?: if (hard) s.monthsHard else s.months
+            fromNew = true
         }
 
         val dueKm = km?.let { baseKm + it }
@@ -106,7 +100,7 @@ object Status {
             soon -> Level.SOON
             else -> Level.OK
         }
-        return Due(s, level, last, baseKm, baseDate, km, months, dueKm, dueDate, leftKm, leftDays, eta, progress, fromPurchase)
+        return Due(s, level, last, baseKm, baseDate, km, months, dueKm, dueDate, leftKm, leftDays, eta, progress, fromNew)
     }
 
     /** Все пункты: сначала то, что горит. */
